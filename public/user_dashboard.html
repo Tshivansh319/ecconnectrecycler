@@ -4,123 +4,192 @@
   <meta charset="UTF-8" />
   <title>User Dashboard - EcoConnect</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+  <script src="firebase.js"></script>
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f0f4f8;
       margin: 0;
+      background: linear-gradient(to right, #536976, #292e49);
+      color: white;
     }
+
     header {
+      background-color: #2c7a7b;
+      padding: 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: #2c7a7b;
-      color: white;
-      padding: 1rem 2rem;
     }
-    header h1 {
-      margin: 0;
-      font-size: 1.4rem;
+
+    .menu-icon {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
     }
-    nav a {
-      margin-left: 1rem;
+
+    .menu-icon div {
+      height: 4px;
+      background-color: white;
+      margin: 4px 0;
+      width: 25px;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+    }
+
+    nav ul li a {
       text-decoration: none;
       color: white;
       font-weight: bold;
-      padding: 0.4rem 0.8rem;
-      border-radius: 4px;
-      background-color: #1e5d5f;
     }
-    h2 {
-      color: #2c7a7b;
-      text-align: center;
-      margin-top: 1.5rem;
+
+    @media (max-width: 768px) {
+      .menu-icon { display: flex; }
+      nav ul {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        right: 20px;
+        top: 60px;
+        background-color: #222;
+        border-radius: 5px;
+        padding: 10px;
+      }
+      nav ul.show { display: flex; }
     }
-    .recycler-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
+
+    .container {
       padding: 2rem;
+      text-align: center;
     }
-    .card {
-      background-color: white;
-      padding: 1.5rem;
+
+    .actions {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .actions a {
+      background-color: #28a745;
+      padding: 12px 20px;
+      text-decoration: none;
+      color: white;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .actions a:hover {
+      background-color: #218838;
+    }
+
+    .notifications {
+      margin-top: 2rem;
+      background: white;
+      color: black;
+      padding: 1rem;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      border-left: 5px solid #2c7a7b;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .card h3 {
-      margin: 0;
+
+    .notifications h3 {
+      margin-top: 0;
       color: #2c7a7b;
     }
-    .card p {
-      margin: 0.4rem 0;
-      font-size: 0.95rem;
+
+    .notification {
+      border-bottom: 1px solid #ddd;
+      padding: 0.5rem 0;
     }
-    .trust {
-      font-weight: bold;
-      color: green;
-    }
-    .card button {
-      margin-top: 0.8rem;
-      padding: 0.6rem 1rem;
-      background-color: #2c7a7b;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+
+    .notification:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>EcoConnect Dashboard</h1>
+    <h2>EcoConnect</h2>
+    <div class="menu-icon" onclick="toggleMenu()">
+      <div></div><div></div><div></div>
+    </div>
     <nav>
-      <a href="schedule_pickup.html">Schedule Pickup</a>
-      <a href="pickup_history.html">Pickup History</a>
-      <a href="edit_profile.html">Edit Profile</a>
-      <a href="market_dashboard.html">Market</a>
-      <a href="logout.html">Logout</a>
+      <ul id="menu">
+        <li><a href="edit_profile.html">Edit Profile</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="login.html">Logout</a></li>
+      </ul>
     </nav>
   </header>
 
-  <h2>Welcome! Trusted Recyclers in Your Area</h2>
+  <div class="container">
+    <h3 id="welcomeMsg">Welcome!</h3>
 
-  <div class="recycler-list" id="recyclerList">
-    <!-- Recyclers will load here -->
+    <div class="actions">
+      <a href="schedule_pickup.html">Schedule Pickup</a>
+      <a href="market_dashboard.html">Nearby Markets</a>
+    </div>
+
+    <div class="notifications">
+      <h3>Your Notifications</h3>
+      <div id="notifList">Loading...</div>
+    </div>
   </div>
 
   <script>
-    const recyclers = [
-      { name: "Aman Bangarwala", city: "Lucknow", trust: 4.9, contact: "9876543210" },
-      { name: "Eco Recycle Pvt Ltd", city: "Kanpur", trust: 4.6, contact: "9871112233" },
-      { name: "Sharma Scrap", city: "Delhi", trust: 4.8, contact: "9811122334" },
-      { name: "Green Cart Recyclers", city: "Noida", trust: 4.2, contact: "9822233445" },
-      { name: "Waste2Gold", city: "Pune", trust: 4.7, contact: "9888877766" }
-    ];
-
-    recyclers.sort((a, b) => b.trust - a.trust);
-
-    const container = document.getElementById("recyclerList");
-
-    recyclers.forEach(r => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <h3>${r.name}</h3>
-        <p><strong>City:</strong> ${r.city}</p>
-        <p><strong>Contact:</strong> ${r.contact}</p>
-        <p class="trust">Trust Score: ${r.trust} ⭐</p>
-        <button onclick="schedule('${r.name}')">Schedule Pickup</button>
-      `;
-      container.appendChild(card);
-    });
-
-    function schedule(recyclerName) {
-      localStorage.setItem('selectedRecycler', recyclerName);
-      window.location.href = 'schedule_pickup.html';
+    function toggleMenu() {
+      document.getElementById("menu").classList.toggle("show");
     }
+
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const userDoc = await db.collection("users").doc(user.uid).get();
+      const userData = userDoc.data();
+      document.getElementById("welcomeMsg").textContent = 
+        `Welcome ${userData.name} (${userData.role}) from ${userData.society}`;
+
+      // Fetch notifications
+      const notifList = document.getElementById("notifList");
+      notifList.innerHTML = "";
+
+      const snapshot = await db.collection("notifications")
+        .where("to", "==", user.uid)
+        .orderBy("timestamp", "desc")
+        .limit(10)
+        .get();
+
+      if (snapshot.empty) {
+        notifList.innerHTML = "<p>No notifications found.</p>";
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.className = "notification";
+        div.textContent = `${data.message} (${new Date(data.timestamp).toLocaleString()})`;
+        notifList.appendChild(div);
+      });
+    });
   </script>
 
 </body>

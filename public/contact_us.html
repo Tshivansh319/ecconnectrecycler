@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact Us - EcoConnect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+
+  <!-- Firebase config and logic -->
+  <script src="firebase.js"></script>
+  <script src="script.js"></script>
+
+  <style>
+    body {
+      background: linear-gradient(to right, #00b4db, #0083b0);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      margin: 0;
+    }
+    header {
+      background-color: #000;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .menu-icon {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+    }
+    .menu-icon div {
+      height: 4px;
+      background-color: white;
+      margin: 4px 0;
+      width: 25px;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+    }
+    nav ul li a {
+      text-decoration: none;
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .menu-icon { display: flex; }
+      nav ul {
+        display: none;
+        position: absolute;
+        top: 60px;
+        right: 20px;
+        flex-direction: column;
+        background-color: #222;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      nav ul.show { display: flex; }
+    }
+
+    .container {
+      padding: 30px;
+      max-width: 500px;
+      margin: auto;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    input, textarea {
+      margin-bottom: 15px;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #00695c;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #004d40;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>EcoConnect</h2>
+    <div class="menu-icon" onclick="toggleMenu()">
+      <div></div><div></div><div></div>
+    </div>
+    <nav>
+      <ul id="menu">
+        <li><a href="user_dashboard.html">Home</a></li>
+        <li><a href="login.html">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h2>Contact Us</h2>
+    <form onsubmit="submitContact(event)">
+      <input type="text" id="name" placeholder="Your Name" required>
+      <input type="email" id="email" placeholder="Your Email" required>
+      <textarea id="message" rows="5" placeholder="Your Message" required></textarea>
+      <button type="submit">Send Message</button>
+    </form>
+    <p id="status" style="margin-top: 10px;"></p>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById("menu").classList.toggle("show");
+    }
+
+    const db = firebase.firestore();
+
+    async function submitContact(e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const message = document.getElementById("message").value;
+      const status = document.getElementById("status");
+
+      try {
+        await db.collection("feedback").add({
+          name,
+          email,
+          message,
+          timestamp: Date.now()
+        });
+        status.textContent = "Message sent! ✅";
+        status.style.color = "lightgreen";
+        document.querySelector("form").reset();
+      } catch (err) {
+        console.error("Error:", err);
+        status.textContent = "Failed to send. ❌";
+        status.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>

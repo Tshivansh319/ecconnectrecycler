@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EcoConnect - Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      padding: 2rem;
+      max-width: 500px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+      color: #2c7a7b;
+    }
+    label {
+      margin-top: 1rem;
+      display: block;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.3rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 0.8rem;
+      font-size: 1rem;
+      background: #2c7a7b;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+
+<!-- Your Firebase config -->
+<script src="firebase.js"></script>
+</head>
+<body>
+
+  <h2>Sign Up for EcoConnect</h2>
+
+  <form id="signupForm">
+    <label for="name">Full Name:</label>
+    <input type="text" id="name" required>
+
+    <label for="phone">Phone Number:</label>
+    <input type="text" id="phone" placeholder="+91XXXXXXXXXX" required>
+
+    <label for="userType">Type of User:</label>
+    <select id="userType" required>
+      <option value="">-- Select --</option>
+      <option value="flat">Flat Resident</option>
+      <option value="household">Individual Household</option>
+      <option value="recycler">Recycler (Bangarwala)</option>
+    </select>
+
+    <div id="flatOptions" class="hidden">
+      <label for="state">State:</label>
+      <select id="state">
+        <option value="">Select State</option>
+        <option value="Maharashtra">Maharashtra</option>
+        <option value="Uttar Pradesh">Uttar Pradesh</option>
+        <option value="Delhi">Delhi</option>
+      </select>
+
+      <label for="city">City:</label>
+      <select id="city">
+        <option value="">Select City</option>
+      </select>
+
+      <label for="flat">Flat/Society:</label>
+      <select id="flat">
+        <option value="">Select Flat</option>
+      </select>
+    </div>
+
+    <div id="manualEntry" class="hidden">
+      <label for="manualAddress">House/Shop Number:</label>
+      <input type="text" id="manualAddress" placeholder="e.g. H.No. 123 or Shop No. 4A">
+    </div>
+
+    <button type="submit">Continue (OTP & Save)</button>
+  </form>
+
+  <script>
+    const userTypeSelect = document.getElementById("userType");
+    const flatOptionsDiv = document.getElementById("flatOptions");
+    const manualEntryDiv = document.getElementById("manualEntry");
+
+    const stateSelect = document.getElementById("state");
+    const citySelect = document.getElementById("city");
+    const flatSelect = document.getElementById("flat");
+
+    const cityOptions = {
+      "Maharashtra": ["Mumbai", "Pune"],
+      "Uttar Pradesh": ["Lucknow", "Kanpur"],
+      "Delhi": ["New Delhi", "Dwarka"]
+    };
+
+    const flatOptions = {
+      "Mumbai": ["Greenwood Tower", "Ocean Pearl"],
+      "Pune": ["Skyline Residency", "Eco Homes"],
+      "Lucknow": ["Gomti Apartments", "Hazrat Villas"],
+      "Kanpur": ["GT Tower", "Smart City Flats"],
+      "New Delhi": ["Metro Greens", "RWA Sector 10"],
+      "Dwarka": ["Dwarka Heights", "EcoNest"]
+    };
+
+    userTypeSelect.addEventListener("change", function () {
+      const selectedType = this.value;
+      if (selectedType === "flat") {
+        flatOptionsDiv.classList.remove("hidden");
+        manualEntryDiv.classList.add("hidden");
+      } else if (selectedType === "household" || selectedType === "recycler") {
+        manualEntryDiv.classList.remove("hidden");
+        flatOptionsDiv.classList.add("hidden");
+      } else {
+        manualEntryDiv.classList.add("hidden");
+        flatOptionsDiv.classList.add("hidden");
+      }
+    });
+
+    stateSelect.addEventListener("change", function () {
+      const selectedState = this.value;
+      const cities = cityOptions[selectedState] || [];
+      citySelect.innerHTML = `<option value="">Select City</option>`;
+      cities.forEach(city => {
+        citySelect.innerHTML += `<option value="${city}">${city}</option>`;
+      });
+      flatSelect.innerHTML = `<option value="">Select Flat</option>`;
+    });
+
+    citySelect.addEventListener("change", function () {
+      const selectedCity = this.value;
+      const flats = flatOptions[selectedCity] || [];
+      flatSelect.innerHTML = `<option value="">Select Flat</option>`;
+      flats.forEach(flat => {
+        flatSelect.innerHTML += `<option value="${flat}">${flat}</option>`;
+      });
+    });
+  </script>
+
+</body>
+</html>

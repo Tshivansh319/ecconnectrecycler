@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EcoConnect - Recycle Smarter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: #2c7a7b;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      margin-left: 1rem;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: #2c7a7b;
+    }
+
+    .hero-desc {
+      font-size: 1.2rem;
+      color: #444;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+
+    .cta-container {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .cta-button {
+      padding: 0.75rem 1.5rem;
+      background-color: #2c7a7b;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+
+    .cta-button:hover {
+      background-color: #285e61;
+    }
+
+    footer {
+      background-color: #2c7a7b;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+
+<!-- Your Firebase config -->
+<script src="firebase.js"></script>
+</head>
+<body>
+
+  <header>
+    <div><strong>♻️ EcoConnect</strong></div>
+    <nav>
+      <a href="login.html">Login</a>
+      <a href="signup.html">Sign Up</a>
+      <a href="services.html">Services</a>
+      <a href="contact_us.html">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1 class="hero-title">Recycle Smarter with EcoConnect</h1>
+    <p class="hero-desc">
+      Connect with trusted local bangarwalas, schedule pickups easily, and make money while saving the planet.
+    </p>
+
+    <div class="cta-container">
+      <a href="login.html" class="cta-button">Login</a>
+      <a href="signup.html" class="cta-button">Sign Up</a>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 EcoConnect | Empowering Clean Communities 🌱
+  </footer>
+
+</body>
+</html>

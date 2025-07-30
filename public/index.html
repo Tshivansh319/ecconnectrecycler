@@ -4,20 +4,24 @@
   <meta charset="UTF-8" />
   <title>EcoConnect - Recycle Smarter</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <link rel="stylesheet" href="style.css">
 
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+  <script src="firebase.js"></script>
+
+  <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f0f4f8;
       color: #333;
+      margin: 0;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
     }
 
     header {
@@ -87,15 +91,40 @@
       text-align: center;
       padding: 1rem;
     }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
 
-<!-- Your Firebase config -->
-<script src="firebase.js"></script>
+    .logo {
+      width: 100px;
+      margin-bottom: 1rem;
+    }
+
+    .dark {
+      background: #1a202c;
+      color: white;
+    }
+
+    .dark header, .dark footer {
+      background-color: #111;
+    }
+
+    .dark .hero-title {
+      color: #90cdf4;
+    }
+
+    .toggle-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: #fff;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
+
+  <button class="toggle-btn" onclick="toggleTheme()">Toggle Theme</button>
 
   <header>
     <div><strong>♻️ EcoConnect</strong></div>
@@ -108,6 +137,7 @@
   </header>
 
   <main>
+    <img class="logo" src="https://www.svgrepo.com/show/354354/recycle-symbol.svg" alt="Recycle Logo">
     <h1 class="hero-title">Recycle Smarter with EcoConnect</h1>
     <p class="hero-desc">
       Connect with trusted local bangarwalas, schedule pickups easily, and make money while saving the planet.
@@ -122,6 +152,20 @@
   <footer>
     &copy; 2025 EcoConnect | Empowering Clean Communities 🌱
   </footer>
+
+  <script>
+    // Auto-redirect if user is already logged in
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        window.location.href = "user_dashboard.html";
+      }
+    });
+
+    // Dark mode toggle
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+    }
+  </script>
 
 </body>
 </html>

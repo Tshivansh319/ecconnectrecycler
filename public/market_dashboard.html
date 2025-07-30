@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Market Dashboard - EcoConnect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+  <script src="firebase.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #373b44, #4286f4);
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #2c7a7b;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .market {
+      background: white;
+      color: black;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    .market h3 {
+      margin-top: 0;
+      color: #2c7a7b;
+    }
+
+    .distance {
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .loading {
+      font-style: italic;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <header>Nearby Recycling Markets</header>
+
+  <div class="container" id="marketList">
+    <p class="loading">Detecting location and fetching data...</p>
+  </div>
+
+  <script>
+    const db = firebase.firestore();
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Radius of Earth in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c; // Distance in km
+    }
+
+    function fetchMarkets(lat, lng) {
+      db.collection("markets").get().then(snapshot => {
+        const list = document.getElementById("marketList");
+        list.innerHTML = "";
+        let anyNearby = false;
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.lat && data.lng) {
+            const distance = getDistance(lat, lng, data.lat, data.lng);
+            if (distance <= 50) { // Only show within 50 km
+              anyNearby = true;
+              const div = document.createElement("div");
+              div.className = "market";
+              div.innerHTML = `
+                <h3>${data.name}</h3>
+                <p>Type: ${data.type || "General"}</p>
+                <p>Contact: ${data.contact || "N/A"}</p>
+                <p class="distance">~${distance.toFixed(1)} km away</p>
+              `;
+              list.appendChild(div);
+            }
+          }
+        });
+
+        if (!anyNearby) {
+          list.innerHTML = "<p>No markets found within 50 km.</p>";
+        }
+      }).catch(err => {
+        document.getElementById("marketList").innerHTML = "<p>Error fetching data.</p>";
+        console.error(err);
+      });
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        fetchMarkets(lat, lng);
+      },
+      error => {
+        document.getElementById("marketList").innerHTML = "<p>Location permission denied or unavailable.</p>";
+        console.error(error);
+      }
+    );
+  </script>
+</body>
+</html>

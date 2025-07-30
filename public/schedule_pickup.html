@@ -1,96 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>EcoConnect - Schedule Pickup</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>Schedule Pickup - EcoConnect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
   <script src="firebase.js"></script>
+
   <style>
-    body { font-family: Arial; max-width: 600px; margin: 2rem auto; background: #f0f4f8; padding: 2rem; border-radius: 8px; }
-    label { display: block; margin-top: 1rem; font-weight: bold; }
-    input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.3rem; }
-    button { margin-top: 1.5rem; background-color: #2c7a7b; color: white; border: none; padding: 0.7rem; cursor: pointer; width: 100%; }
-    h2 { color: #2c7a7b; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #3a7bd5, #00d2ff);
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #2c7a7b;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+
+    .container {
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px;
+      width: 100%;
+      background-color: #28a745;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
-  <h2>Schedule a New Pickup</h2>
-  <form id="pickupForm">
-    <label for="material">Material Type:</label>
-    <select id="material" required>
-      <option value="">Select Material</option>
-      <option value="Paper">Paper</option>
+
+  <header>Schedule a Pickup</header>
+
+  <div class="container">
+    <label>Waste Type</label>
+    <select id="wasteType" required>
+      <option value="">--Select Waste Type--</option>
       <option value="Plastic">Plastic</option>
+      <option value="Paper">Paper</option>
       <option value="Metal">Metal</option>
-      <option value="Glass">Glass</option>
-      <option value="Electronics">Electronics</option>
+      <option value="E-Waste">E-Waste</option>
+      <option value="Other">Other</option>
     </select>
 
-    <label for="weight">Estimated Weight (kg):</label>
-    <input type="number" id="weight" min="1" required />
+    <label>Preferred Date</label>
+    <input type="date" id="date" required />
 
-    <label for="city">City:</label>
-    <input type="text" id="city" disabled />
+    <label>Preferred Time</label>
+    <input type="time" id="time" required />
 
-    <label for="flat">Flat / Society Name:</label>
-    <input type="text" id="flat" disabled />
-
-    <label for="note">Additional Notes (optional):</label>
-    <textarea id="note" rows="3"></textarea>
-
-    <button type="submit">Submit Pickup Request</button>
-  </form>
+    <button onclick="schedulePickup()">Submit Request</button>
+    <p class="status" id="status"></p>
+  </div>
 
   <script>
     const db = firebase.firestore();
 
-    firebase.auth().onAuthStateChanged(async (user) => {
+    async function schedulePickup() {
+      const user = firebase.auth().currentUser;
+      const status = document.getElementById("status");
+
       if (!user) {
-        window.location.href = "login.html";
+        status.textContent = "You must be logged in.";
         return;
       }
 
       const userDoc = await db.collection("users").doc(user.uid).get();
-      if (userDoc.exists) {
-        const data = userDoc.data();
-        document.getElementById("city").value = data.city || "";
-        document.getElementById("flat").value = data.flat || "";
+      const userData = userDoc.data();
+
+      const wasteType = document.getElementById("wasteType").value;
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+
+      if (!wasteType || !date || !time) {
+        status.textContent = "Please fill in all fields.";
+        return;
       }
-    });
 
-    document.getElementById("pickupForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
+      await db.collection("pickup_requests").add({
+        userId: user.uid,
+        name: userData.name,
+        society: userData.society,
+        wasteType,
+        date,
+        time,
+        status: "Pending",
+        timestamp: Date.now()
+      });
 
-      const user = firebase.auth().currentUser;
-      if (!user) return alert("User not logged in!");
+      status.textContent = "Pickup scheduled! Await confirmation.";
+    }
 
-      const material = document.getElementById("material").value;
-      const weight = document.getElementById("weight").value;
-      const city = document.getElementById("city").value;
-      const flat = document.getElementById("flat").value;
-      const note = document.getElementById("note").value;
-
-      try {
-        await db.collection("pickups").add({
-          userID: user.uid,
-          material,
-          weight: parseFloat(weight),
-          city,
-          flat,
-          note,
-          status: "pending",
-          createdAt: new Date()
-        });
-
-        alert("Pickup request submitted!");
-        document.getElementById("pickupForm").reset();
-        window.location.href = "user_dashboard.html";
-      } catch (err) {
-        alert("Error submitting request: " + err.message);
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
       }
     });
   </script>
+
 </body>
 </html>

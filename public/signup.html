@@ -4,155 +4,171 @@
   <meta charset="UTF-8" />
   <title>EcoConnect - Sign Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+  <script src="firebase.js"></script>
+
+  <!-- Leaflet (map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
-      padding: 2rem;
-      max-width: 500px;
-      margin: auto;
+      background: linear-gradient(to right, #74ebd5, #9face6);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
+
+    .signup-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+
     h2 {
       text-align: center;
       color: #2c7a7b;
     }
-    label {
-      margin-top: 1rem;
-      display: block;
-      font-weight: bold;
-    }
+
     input, select {
       width: 100%;
-      padding: 0.7rem;
-      margin-top: 0.3rem;
+      padding: 12px;
+      margin: 10px 0;
       border-radius: 5px;
       border: 1px solid #ccc;
+      font-size: 1rem;
     }
+
     button {
       width: 100%;
-      margin-top: 1.5rem;
-      padding: 0.8rem;
-      font-size: 1rem;
+      padding: 12px;
       background: #2c7a7b;
       color: white;
       border: none;
+      font-size: 1rem;
       border-radius: 5px;
       cursor: pointer;
     }
-    .hidden {
-      display: none;
+
+    button:hover {
+      background: #226466;
+    }
+
+    #map {
+      height: 250px;
+      margin: 15px 0;
+      border-radius: 8px;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 10px;
+      color: green;
     }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
-
-<!-- Your Firebase config -->
-<script src="firebase.js"></script>
 </head>
 <body>
 
-  <h2>Sign Up for EcoConnect</h2>
-
-  <form id="signupForm">
-    <label for="name">Full Name:</label>
-    <input type="text" id="name" required>
-
-    <label for="phone">Phone Number:</label>
-    <input type="text" id="phone" placeholder="+91XXXXXXXXXX" required>
-
-    <label for="userType">Type of User:</label>
-    <select id="userType" required>
-      <option value="">-- Select --</option>
-      <option value="flat">Flat Resident</option>
-      <option value="household">Individual Household</option>
-      <option value="recycler">Recycler (Bangarwala)</option>
+  <div class="signup-box">
+    <h2>Sign Up</h2>
+    <input type="text" id="name" placeholder="Full Name" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    
+    <label>Role</label>
+    <select id="role">
+      <option value="resident">Resident</option>
+      <option value="recycler">Recycler</option>
     </select>
 
-    <div id="flatOptions" class="hidden">
-      <label for="state">State:</label>
-      <select id="state">
-        <option value="">Select State</option>
-        <option value="Maharashtra">Maharashtra</option>
-        <option value="Uttar Pradesh">Uttar Pradesh</option>
-        <option value="Delhi">Delhi</option>
-      </select>
+    <input type="text" id="society" placeholder="Society Name" required />
 
-      <label for="city">City:</label>
-      <select id="city">
-        <option value="">Select City</option>
-      </select>
+    <label>State</label>
+    <select id="state" required>
+      <option value="">--Select State--</option>
+      <option>Maharashtra</option>
+      <option>Delhi</option>
+      <option>Uttar Pradesh</option>
+      <option>Karnataka</option>
+      <option>West Bengal</option>
+      <option>Gujarat</option>
+      <option>Tamil Nadu</option>
+      <option>Bihar</option>
+      <option>Punjab</option>
+      <!-- Add more as needed -->
+    </select>
 
-      <label for="flat">Flat/Society:</label>
-      <select id="flat">
-        <option value="">Select Flat</option>
-      </select>
-    </div>
+    <input type="text" id="city" placeholder="City" required />
+    <input type="number" id="zip" placeholder="ZIP Code" required />
 
-    <div id="manualEntry" class="hidden">
-      <label for="manualAddress">House/Shop Number:</label>
-      <input type="text" id="manualAddress" placeholder="e.g. H.No. 123 or Shop No. 4A">
-    </div>
+    <label>Mark Your Location</label>
+    <div id="map"></div>
+    <input type="hidden" id="latitude" />
+    <input type="hidden" id="longitude" />
 
-    <button type="submit">Continue (OTP & Save)</button>
-  </form>
+    <button onclick="signupUser()">Sign Up</button>
+    <p class="status" id="status"></p>
+  </div>
 
   <script>
-    const userTypeSelect = document.getElementById("userType");
-    const flatOptionsDiv = document.getElementById("flatOptions");
-    const manualEntryDiv = document.getElementById("manualEntry");
+    // Initialize map
+    const map = L.map('map').setView([21.1458, 79.0882], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
 
-    const stateSelect = document.getElementById("state");
-    const citySelect = document.getElementById("city");
-    const flatSelect = document.getElementById("flat");
+    const marker = L.marker([21.1458, 79.0882], { draggable: true }).addTo(map);
+    marker.on('dragend', function () {
+      const pos = marker.getLatLng();
+      document.getElementById("latitude").value = pos.lat;
+      document.getElementById("longitude").value = pos.lng;
+    });
 
-    const cityOptions = {
-      "Maharashtra": ["Mumbai", "Pune"],
-      "Uttar Pradesh": ["Lucknow", "Kanpur"],
-      "Delhi": ["New Delhi", "Dwarka"]
-    };
+    const db = firebase.firestore();
 
-    const flatOptions = {
-      "Mumbai": ["Greenwood Tower", "Ocean Pearl"],
-      "Pune": ["Skyline Residency", "Eco Homes"],
-      "Lucknow": ["Gomti Apartments", "Hazrat Villas"],
-      "Kanpur": ["GT Tower", "Smart City Flats"],
-      "New Delhi": ["Metro Greens", "RWA Sector 10"],
-      "Dwarka": ["Dwarka Heights", "EcoNest"]
-    };
+    async function signupUser() {
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+      const society = document.getElementById("society").value;
+      const state = document.getElementById("state").value;
+      const city = document.getElementById("city").value;
+      const zip = document.getElementById("zip").value;
+      const lat = parseFloat(document.getElementById("latitude").value);
+      const lng = parseFloat(document.getElementById("longitude").value);
+      const statusText = document.getElementById("status");
 
-    userTypeSelect.addEventListener("change", function () {
-      const selectedType = this.value;
-      if (selectedType === "flat") {
-        flatOptionsDiv.classList.remove("hidden");
-        manualEntryDiv.classList.add("hidden");
-      } else if (selectedType === "household" || selectedType === "recycler") {
-        manualEntryDiv.classList.remove("hidden");
-        flatOptionsDiv.classList.add("hidden");
-      } else {
-        manualEntryDiv.classList.add("hidden");
-        flatOptionsDiv.classList.add("hidden");
+      if (!lat || !lng) {
+        statusText.textContent = "Please drag the marker to your location.";
+        return;
       }
-    });
 
-    stateSelect.addEventListener("change", function () {
-      const selectedState = this.value;
-      const cities = cityOptions[selectedState] || [];
-      citySelect.innerHTML = `<option value="">Select City</option>`;
-      cities.forEach(city => {
-        citySelect.innerHTML += `<option value="${city}">${city}</option>`;
-      });
-      flatSelect.innerHTML = `<option value="">Select Flat</option>`;
-    });
+      try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const uid = userCredential.user.uid;
 
-    citySelect.addEventListener("change", function () {
-      const selectedCity = this.value;
-      const flats = flatOptions[selectedCity] || [];
-      flatSelect.innerHTML = `<option value="">Select Flat</option>`;
-      flats.forEach(flat => {
-        flatSelect.innerHTML += `<option value="${flat}">${flat}</option>`;
-      });
-    });
+        await db.collection("users").doc(uid).set({
+          name, email, role, society, state, city, zip, lat, lng, approved: false
+        });
+
+        statusText.textContent = "Signup successful!";
+        window.location.href = "user_dashboard.html";
+      } catch (error) {
+        statusText.textContent = error.message;
+        console.error(error);
+      }
+    }
   </script>
 
 </body>
